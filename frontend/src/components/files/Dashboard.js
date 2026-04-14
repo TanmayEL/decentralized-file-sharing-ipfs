@@ -12,43 +12,40 @@ import {
   CircularProgress,
   Alert
 } from '@mui/material';
-import { Download, Public } from '@mui/icons-material';
-import { useAuth } from '../context/Web3Context';
-import { fileAPI } from '../services/api';
+import { Download, Share, Delete, CloudUpload } from '@mui/icons-material';
+import { useAuth } from '../../context/AuthContext';
+import { fileAPI } from '../../services/api';
 import { toast } from 'react-toastify';
 import { format } from 'date-fns';
 import { saveAs } from 'file-saver';
 
-const PublicFiles = () => {
-  const { isAuthenticated } = useAuth();
+const Dashboard = () => {
+  const { user } = useAuth();
   const [files, setFiles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    loadPublicFiles();
+    loadUserFiles();
   }, []);
 
-  const loadPublicFiles = async () => {
+  const loadUserFiles = async () => {
     try {
       setLoading(true);
-      const response = await fileAPI.getPublicFiles();
+      const response = await fileAPI.getUserFiles();
+      console.log('User files response:', response.data.files);
+      console.log('Current user:', user);
       setFiles(response.data.files);
     } catch (error) {
-      console.error('Error loading public files:', error);
-      setError('Failed to load public files');
-      toast.error('Failed to load public files');
+      console.error('Error loading files:', error);
+      setError('Failed to load files');
+      toast.error('Failed to load files');
     } finally {
       setLoading(false);
     }
   };
 
   const handleDownload = async (file) => {
-    if (!isAuthenticated) {
-      toast.error('Please log in to download files');
-      return;
-    }
-
     try {
       const response = await fileAPI.downloadFile(file.ipfsHash);
       const blob = new Blob([response.data]);
@@ -57,6 +54,29 @@ const PublicFiles = () => {
     } catch (error) {
       console.error('Download error:', error);
       toast.error('Failed to download file');
+    }
+  };
+
+  const handleShare = async (file) => {
+    try {
+      await navigator.clipboard.writeText(file.ipfsHash);
+      toast.success('File hash copied to clipboard!');
+    } catch (error) {
+      console.error('Share error:', error);
+      toast.error('Failed to share file');
+    }
+  };
+
+  const handleDelete = async (file) => {
+    if (window.confirm('Are you sure you want to delete this file?')) {
+      try {
+        await fileAPI.deleteFile(file.ipfsHash);
+        setFiles(files.filter(f => f._id !== file._id));
+        toast.success('File deleted successfully!');
+      } catch (error) {
+        console.error('Delete error:', error);
+        toast.error('Failed to delete file');
+      }
     }
   };
 
@@ -73,7 +93,7 @@ const PublicFiles = () => {
       <Container maxWidth="lg" sx={{ mt: 4, textAlign: 'center' }}>
         <CircularProgress />
         <Typography variant="h6" sx={{ mt: 2 }}>
-          Loading public files...
+          Loading your files...
         </Typography>
       </Container>
     );
@@ -90,9 +110,9 @@ const PublicFiles = () => {
   return (
     <Container maxWidth="lg" sx={{ mt: 4 }}>
       <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-        <Public sx={{ mr: 1 }} />
+        <CloudUpload sx={{ mr: 1 }} />
         <Typography variant="h4" component="h1">
-          Public Files
+          My Files
         </Typography>
       </Box>
 
@@ -100,10 +120,10 @@ const PublicFiles = () => {
         <Card>
           <CardContent sx={{ textAlign: 'center', py: 4 }}>
             <Typography variant="h6" color="text.secondary">
-              No public files available
+              No files uploaded yet
             </Typography>
             <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-              Be the first to share a public file!
+              Upload your first file to get started!
             </Typography>
           </CardContent>
         </Card>
@@ -118,19 +138,29 @@ const PublicFiles = () => {
                   </Typography>
                   <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
                     {formatFileSize(file.size)}
+                    {file.compressed && file.originalSize && (
+                      <span style={{ color: '#4caf50', marginLeft: '8px' }}>
+                        (compressed from {formatFileSize(file.originalSize)})
+                      </span>
+                    )}
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
                     {format(new Date(file.uploadDate), 'MMM dd, yyyy')}
                   </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    by {file.uploader.username}
-                  </Typography>
-                  <Box sx={{ mt: 1 }}>
+                  <Box sx={{ mt: 1, display: 'flex', gap: 1, flexWrap: 'wrap' }}>
                     <Chip
-                      label="Public"
-                      color="success"
+                      label={file.isPublic ? 'Public' : 'Private'}
+                      color={file.isPublic ? 'success' : 'default'}
                       size="small"
                     />
+                    {file.compressed && (
+                      <Chip
+                        label="Compressed"
+                        color="info"
+                        size="small"
+                        variant="outlined"
+                      />
+                    )}
                   </Box>
                   {file.description && (
                     <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
@@ -146,10 +176,29 @@ const PublicFiles = () => {
                     size="small"
                     startIcon={<Download />}
                     onClick={() => handleDownload(file)}
-                    disabled={!isAuthenticated}
                   >
-                    {isAuthenticated ? 'Download' : 'Login to Download'}
+                    Download
                   </Button>
+                  <Button
+                    size="small"
+                    startIcon={<Share />}
+                    onClick={() => handleShare(file)}
+                  >
+                    Share
+                  </Button>
+                  {(file.uploader._id === user._id ||
+                    file.uploader._id === user.id ||
+                    file.uploader === user._id ||
+                    file.uploader === user.id) && (
+                    <Button
+                      size="small"
+                      startIcon={<Delete />}
+                      onClick={() => handleDelete(file)}
+                      color="error"
+                    >
+                      Delete
+                    </Button>
+                  )}
                 </CardActions>
               </Card>
             </Grid>
@@ -160,5 +209,4 @@ const PublicFiles = () => {
   );
 };
 
-export default PublicFiles;
-
+export default Dashboard;
