@@ -9,7 +9,7 @@ Upload files to IPFS. Share them with anyone. Files live on a decentralized netw
 ## What it does
 
 - Upload files (up to 10MB) → get pinned to IPFS via Pinata
-- Auto-compresses before upload — images via Sharp, everything else gzipped
+- Auto-compresses before upload — images via Pillow, everything else gzipped
 - Public or private files, with per-user access sharing
 - Files expire after 7 days unless you mark them persistent
 - JWT auth, bcrypt passwords, rate limiting — the usual
@@ -20,7 +20,7 @@ Upload files to IPFS. Share them with anyone. Files live on a decentralized netw
 
 **Frontend** — React + Material-UI, deployed on Netlify
 
-**Backend** — Node/Express, deployed on Vercel
+**Backend** — Python/Django, deployed on Vercel
 
 **Storage** — Pinata (IPFS pinning) + MongoDB Atlas (metadata)
 
@@ -28,15 +28,14 @@ Upload files to IPFS. Share them with anyone. Files live on a decentralized netw
 
 ## Architecture
 
-MVC — the backend is no longer a 650-line monolith:
+MVC — split across Django apps with a shared core services layer:
 
 ```
-backend/
-├── models/        → User, File schemas
-├── controllers/   → request handlers
-├── services/      → IPFS, compression, cleanup logic
-├── middleware/    → auth, upload, error handling
-└── routes/        → auth + file routes
+django_backend/
+├── auth_app/      → register, login, JWT refresh
+├── files_app/     → upload, download, share, delete
+├── admin_app/     → user and file moderation
+└── core/          → auth, DB, IPFS, compression services
 
 frontend/src/
 ├── components/
@@ -51,10 +50,11 @@ frontend/src/
 
 ## Running locally
 
-Clone, add a `.env` to `/backend`:
+Clone, copy `django_backend/.env.example` to `django_backend/.env` and fill in:
 
 ```
 MONGODB_URI=your_mongo_uri
+DJANGO_SECRET_KEY=your_django_secret
 JWT_SECRET=something_long_and_random
 PINATA_API_KEY=your_key
 PINATA_SECRET_KEY=your_secret
@@ -65,7 +65,7 @@ Then:
 
 ```bash
 # backend
-cd backend && npm install && node index.js
+cd django_backend && pip install -r requirements.txt && python manage.py runserver
 
 # frontend (new terminal)
 cd frontend && npm install && npm start
