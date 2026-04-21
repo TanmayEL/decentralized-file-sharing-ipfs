@@ -14,8 +14,8 @@ import {
 } from '@mui/material';
 import { CloudUpload, Upload } from '@mui/icons-material';
 import { useDropzone } from 'react-dropzone';
-import { useAuth } from '../context/Web3Context';
-import { fileAPI } from '../services/api';
+import { useAuth } from '../../context/AuthContext';
+import { fileAPI } from '../../services/api';
 import { toast } from 'react-toastify';
 
 const FileUpload = () => {
@@ -36,7 +36,7 @@ const FileUpload = () => {
       }
       return;
     }
-    
+
     if (acceptedFiles.length > 0) {
       const file = acceptedFiles[0];
       setSelectedFile(file);
@@ -53,7 +53,7 @@ const FileUpload = () => {
       'application/zip': ['.zip'],
       'application/json': ['.json']
     },
-    maxSize: 10 * 1024 * 1024, // 10MB limit for free tier optimization
+    maxSize: 10 * 1024 * 1024,
     multiple: false
   });
 
@@ -77,7 +77,6 @@ const FileUpload = () => {
       formData.append('description', fileDescription);
       formData.append('isPublic', isPublic.toString());
 
-      // Simulate progress
       const progressInterval = setInterval(() => {
         setUploadProgress(prev => {
           if (prev >= 90) {
@@ -88,14 +87,13 @@ const FileUpload = () => {
         });
       }, 200);
 
-      const response = await fileAPI.uploadFile(formData);
-      
+      await fileAPI.uploadFile(formData);
+
       clearInterval(progressInterval);
       setUploadProgress(100);
 
       toast.success('File uploaded successfully!');
-      
-      // Reset form
+
       setSelectedFile(null);
       setFileDescription('');
       setIsPublic(false);

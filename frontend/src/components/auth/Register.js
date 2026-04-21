@@ -11,7 +11,7 @@ import {
   Alert,
   CircularProgress
 } from '@mui/material';
-import { useAuth } from '../context/Web3Context';
+import { useAuth } from '../../context/AuthContext';
 import { toast } from 'react-toastify';
 
 const Register = () => {
@@ -39,7 +39,6 @@ const Register = () => {
     setLoading(true);
     setError('');
 
-    // Validation
     if (formData.password !== formData.confirmPassword) {
       setError('Passwords do not match');
       setLoading(false);
@@ -54,7 +53,7 @@ const Register = () => {
 
     try {
       const result = await register(formData.username, formData.email, formData.password);
-      
+
       if (result.success) {
         toast.success('Registration successful!');
         navigate('/');
@@ -84,7 +83,7 @@ const Register = () => {
           <Typography component="h1" variant="h4" align="center" gutterBottom>
             Sign Up
           </Typography>
-          
+
           {error && (
             <Alert severity="error" sx={{ mb: 2 }}>
               {error}
@@ -170,4 +169,3 @@ const Register = () => {
 };
 
 export default Register;
-

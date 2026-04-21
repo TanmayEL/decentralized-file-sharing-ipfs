@@ -1,92 +1,84 @@
-# 🌐 IPFS File Sharing Platform
+# IPFS File Sharing
 
-A decentralized file sharing application that stores files on the InterPlanetary File System (IPFS) using Pinata as the IPFS pinning service. Users can upload, share, and collaborate on files publicly with a modern React frontend and Node.js backend. Features automatic file compression, upload limits, and cleanup for optimal free tier usage.
+Upload files to IPFS. Share them with anyone. Files live on a decentralized network — no single server to go down, no single company to pull the plug.
 
-## Live Application
+**Live:** [ipfs-file-sharing.netlify.app](https://ipfs-file-sharing.netlify.app)
 
-Access the application directly through these URLs:
+---
 
-- **Frontend**: [https://ipfs-file-sharing.netlify.app](https://ipfs-file-sharing.netlify.app)
-- **Backend API**: [https://ipfs-file-sharing-backend.vercel.app](https://ipfs-file-sharing-backend.vercel.app)
+## What it does
 
-### Quick Start Guide
-1. Visit [https://ipfs-file-sharing.netlify.app](https://ipfs-file-sharing.netlify.app)
-2. Register a new account or login
-3. Start uploading and sharing files!
+- Upload files (up to 10MB) → get pinned to IPFS via Pinata
+- Auto-compresses before upload — images via Sharp, everything else gzipped
+- Public or private files, with per-user access sharing
+- Files expire after 7 days unless you mark them persistent
+- JWT auth, bcrypt passwords, rate limiting — the usual
 
-### Usage Limits
-- Maximum file size: 10MB
-- Files are automatically removed after 7 days
-- Storage and bandwidth limits apply (Pinata free tier)
+---
 
-## Features
+## Stack
 
-- **Decentralized Storage**: Files stored on IPFS network via Pinata
-- **User Authentication**: Email/password authentication with JWT tokens
-- **File Management**: Upload, download, share, and delete files
-- **Access Control**: Public files and private file sharing
-- **File Compression**: Automatic compression of images and files to optimize storage
-- **Upload Limits**: 10MB file size limit for free tier optimization
-- **Auto Cleanup**: Automatic removal of files older than 7 days
-- **Modern UI**: Material-UI components with responsive design
-- **Real-time Updates**: Toast notifications and loading states
+**Frontend** — React + Material-UI, deployed on Netlify
 
-## Technology Stack
+**Backend** — Node/Express, deployed on Vercel
 
-### Frontend
-- **React**: UI framework
-- **Material-UI**: Component library
-- **React Router**: Client-side routing
-- **Axios**: HTTP client
-- **React Dropzone**: File upload UI
-- **React Toastify**: Notifications
+**Storage** — Pinata (IPFS pinning) + MongoDB Atlas (metadata)
 
-### Backend
-- **Node.js**: JavaScript runtime
-- **Express.js**: Web framework
-- **MongoDB**: Database for metadata
-- **Mongoose**: MongoDB ODM
-- **JWT**: Authentication tokens
-- **IPFS**: Decentralized file storage
-- **Pinata**: IPFS pinning service
-- **Sharp**: Image compression library
+---
 
-### Infrastructure
-- **IPFS**: Decentralized file storage
-- **Pinata**: IPFS pinning and gateway service
-- **MongoDB Atlas**: Cloud database
-- **Vercel**: Backend hosting
-- **Netlify**: Frontend hosting
-- **JWT**: Stateless authentication
+## Architecture
 
-## Security Features
+MVC — the backend is no longer a 650-line monolith:
 
-- **Password Hashing**: bcryptjs for secure password storage
-- **JWT Authentication**: Stateless token-based auth
-- **Input Validation**: express-validator for request validation
-- **Rate Limiting**: Protection against abuse
-- **CORS Configuration**: Controlled cross-origin access
-- **Helmet**: Security headers
+```
+backend/
+├── models/        → User, File schemas
+├── controllers/   → request handlers
+├── services/      → IPFS, compression, cleanup logic
+├── middleware/    → auth, upload, error handling
+└── routes/        → auth + file routes
 
-## IPFS Integration
+frontend/src/
+├── components/
+│   ├── auth/      → Login, Register
+│   ├── files/     → Dashboard, FileUpload, PublicFiles
+│   └── common/    → Navbar
+├── context/       → AuthContext
+└── services/      → API client
+```
 
-### How It Works
-1. **File Upload**: Files are compressed and uploaded to IPFS via Pinata
-2. **Content Addressing**: Files get unique IPFS hashes
-3. **Pinning**: Pinata ensures file persistence on IPFS network
-4. **Global Access**: Files accessible via IPFS gateways worldwide
-5. **Metadata Storage**: File information stored in MongoDB Atlas
+---
 
-### Benefits
-- **Decentralized**: No single point of failure
-- **Immutable**: Files cannot be modified
-- **Global**: Accessible worldwide
-- **Efficient**: Deduplication saves space
-- **Censorship Resistant**: Distributed storage
+## Running locally
 
-## 💻 Local Development
+Clone, add a `.env` to `/backend`:
 
-If you want to run the project locally or contribute, check out the [Development Guide](DEVELOPMENT.md).
+```
+MONGODB_URI=your_mongo_uri
+JWT_SECRET=something_long_and_random
+PINATA_API_KEY=your_key
+PINATA_SECRET_KEY=your_secret
+FRONTEND_URL=http://localhost:3000
+```
 
+Then:
 
-**Built with ❤️ for the decentralized web**
+```bash
+# backend
+cd backend && npm install && node index.js
+
+# frontend (new terminal)
+cd frontend && npm install && npm start
+```
+
+---
+
+## Limits
+
+- 10MB max file size
+- Files deleted after 7 days (toggle persistence to keep them)
+- Pinata free tier bandwidth limits apply
+
+---
+
+**Built for the decentralized web.**

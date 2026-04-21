@@ -40,23 +40,20 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     try {
-      console.log('AuthContext: Attempting login');
       const response = await authAPI.login(email, password);
-      console.log('AuthContext: Login successful', response.data);
       const { token: newToken, user: userData } = response.data;
-      
+
       localStorage.setItem('token', newToken);
       setToken(newToken);
       setUser(userData);
       setIsAuthenticated(true);
-      
+
       return { success: true, user: userData };
     } catch (error) {
-      console.error('AuthContext: Login error:', error);
-      console.error('AuthContext: Error response:', error.response?.data);
-      return { 
-        success: false, 
-        error: error.response?.data?.error || 'Login failed' 
+      console.error('Login error:', error);
+      return {
+        success: false,
+        error: error.response?.data?.error || 'Login failed'
       };
     }
   };
@@ -65,18 +62,18 @@ export const AuthProvider = ({ children }) => {
     try {
       const response = await authAPI.register(username, email, password);
       const { token: newToken, user: userData } = response.data;
-      
+
       localStorage.setItem('token', newToken);
       setToken(newToken);
       setUser(userData);
       setIsAuthenticated(true);
-      
+
       return { success: true, user: userData };
     } catch (error) {
       console.error('Registration error:', error);
-      return { 
-        success: false, 
-        error: error.response?.data?.error || 'Registration failed' 
+      return {
+        success: false,
+        error: error.response?.data?.error || 'Registration failed'
       };
     }
   };
@@ -88,15 +85,7 @@ export const AuthProvider = ({ children }) => {
     setIsAuthenticated(false);
   };
 
-  const value = {
-    user,
-    token,
-    isAuthenticated,
-    loading,
-    login,
-    register,
-    logout
-  };
+  const value = { user, token, isAuthenticated, loading, login, register, logout };
 
   return (
     <AuthContext.Provider value={value}>

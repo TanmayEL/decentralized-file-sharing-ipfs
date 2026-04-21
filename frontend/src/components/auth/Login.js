@@ -11,7 +11,7 @@ import {
   Alert,
   CircularProgress
 } from '@mui/material';
-import { useAuth } from '../context/Web3Context';
+import { useAuth } from '../../context/AuthContext';
 import { toast } from 'react-toastify';
 
 const Login = () => {
@@ -35,7 +35,7 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     e.stopPropagation();
-    
+
     setLoading(true);
     setError('');
 
@@ -43,7 +43,7 @@ const Login = () => {
       console.log('Attempting login with:', formData.email);
       const result = await login(formData.email, formData.password);
       console.log('Login result:', result);
-      
+
       if (result.success) {
         toast.success('Login successful!');
         navigate('/');
@@ -75,7 +75,7 @@ const Login = () => {
           <Typography component="h1" variant="h4" align="center" gutterBottom>
             Sign In
           </Typography>
-          
+
           {error && (
             <Alert severity="error" sx={{ mb: 2 }}>
               {error}
